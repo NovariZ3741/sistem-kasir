@@ -121,5 +121,41 @@
             </div>
         </div>
     </div>
+
+    {{-- Pola belanja (Apriori) --}}
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold"><i class="bi bi-diagram-3 me-1"></i> Pola Belanja (Apriori)</span>
+                <a href="{{ route('admin.apriori.index') }}" class="btn btn-sm btn-outline-primary">Lihat analisis</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr><th>Jika membeli</th><th>Maka membeli</th><th class="text-end">Confidence</th><th class="text-end">Lift</th></tr>
+                    </thead>
+                    <tbody>
+                    @forelse($topRules as $rule)
+                        <tr>
+                            <td>{{ $rule->antecedent_label }}</td>
+                            <td><i class="bi bi-arrow-right text-muted me-1"></i>{{ $rule->consequent_label }}</td>
+                            <td class="text-end">{{ number_format($rule->confidence * 100, 0) }}%</td>
+                            <td class="text-end"><span class="badge bg-success">{{ number_format($rule->lift, 2, ',', '.') }}</span></td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="text-center text-muted py-4">
+                            {{ $aprioriRun ? 'Belum ditemukan pola belanja yang kuat.' : 'Analisis Apriori belum pernah dijalankan.' }}
+                        </td></tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if($aprioriRun)
+                <div class="card-footer bg-white small text-muted">
+                    Perhitungan terakhir {{ $aprioriRun->created_at->format('d/m/Y H:i') }} dari {{ $aprioriRun->transaction_count }} transaksi ({{ $aprioriRun->periodLabel() }}).
+                </div>
+            @endif
+        </div>
+    </div>
 </div>
 @endsection

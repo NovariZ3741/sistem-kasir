@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AprioriController;
 use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DiscountController;
@@ -41,5 +42,11 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('discounts', DiscountController::class)->except('show');
         Route::patch('discounts/{discount}/toggle', [DiscountController::class, 'toggle'])->name('discounts.toggle');
+
+        // Analisis pola belanja (Algoritma Apriori)
+        Route::get('apriori', [AprioriController::class, 'index'])->name('apriori.index');
+        Route::post('apriori', [AprioriController::class, 'store'])->name('apriori.store');
+        Route::get('apriori/{run}', [AprioriController::class, 'show'])->name('apriori.show');
+        Route::delete('apriori/{run}', [AprioriController::class, 'destroy'])->name('apriori.destroy');
     });
 });
