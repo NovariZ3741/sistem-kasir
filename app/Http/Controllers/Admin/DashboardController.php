@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AprioriRun;
 use App\Models\Product;
 use App\Models\ProductBatch;
 use App\Models\Transaction;
@@ -47,6 +48,12 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'lowStock', 'expiring', 'topProducts'));
+        // Pola belanja terkuat dari perhitungan Apriori terbaru
+        $aprioriRun = AprioriRun::latestRun();
+        $topRules = $aprioriRun
+            ? $aprioriRun->rules()->where('lift', '>', 1)->orderByDesc('lift')->orderByDesc('confidence')->limit(5)->get()
+            : collect();
+
+        return view('admin.dashboard', compact('stats', 'lowStock', 'expiring', 'topProducts', 'aprioriRun', 'topRules'));
     }
 }

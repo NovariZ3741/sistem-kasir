@@ -9,7 +9,7 @@
                 <div class="text-center mb-4">
                     <i class="bi bi-shop text-primary" style="font-size: 2.5rem; color: var(--brand) !important;"></i>
                     <h4 class="mt-2 mb-0">{{ config('app.name') }}</h4>
-                    <small class="text-muted">Masuk untuk memulai</small>
+                     
                 </div>
 
                 <form method="POST" action="{{ route('login') }}">

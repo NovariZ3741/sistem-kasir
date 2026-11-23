@@ -78,6 +78,9 @@
                 <a class="nav-link {{ request()->routeIs('admin.discounts.*') ? 'active' : '' }}" href="{{ route('admin.discounts.index') }}">
                     <i class="bi bi-tags"></i> Diskon
                 </a>
+                <a class="nav-link {{ request()->routeIs('admin.apriori.*') ? 'active' : '' }}" href="{{ route('admin.apriori.index') }}">
+                    <i class="bi bi-diagram-3"></i> Analisis Apriori
+                </a>
                 <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
     <i class="bi bi-people"></i> Kelola Akun
 </a>

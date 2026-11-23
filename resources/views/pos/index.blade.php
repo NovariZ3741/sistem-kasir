@@ -13,6 +13,15 @@
             </div>
             <div class="list-group list-group-flush" id="results" style="max-height: 60vh; overflow-y: auto;"></div>
         </div>
+
+        {{-- Rekomendasi dari Algoritma Apriori --}}
+        <div class="card shadow-sm mt-3 d-none" id="reco-card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold"><i class="bi bi-lightbulb text-warning me-1"></i> Sering Dibeli Bersama</span>
+                <small class="text-muted">berdasarkan analisis Apriori</small>
+            </div>
+            <div class="list-group list-group-flush" id="reco"></div>
+        </div>
     </div>
 
     {{-- KANAN: keranjang & pembayaran --}}
@@ -56,6 +65,8 @@
 
 <script>
     const products = @json($products);
+    const rules = @json($recommendationRules); // [{a: [id], c: [id], conf, lift}]
+    const maxReco = {{ (int) config('apriori.pos_recommendations', 5) }};
     const byId = Object.fromEntries(products.map(p => [p.id, p]));
     let cart = []; // [{id, qty}]
 
@@ -146,6 +157,43 @@
             </div>`;
         }).join('');
         updateTotals();
+        renderRecommendations();
+    }
+
+    /* ---------- Rekomendasi (Apriori) ---------- */
+    function renderRecommendations() {
+        const inCart = new Set(cart.map(i => i.id));
+        const best = {}; // product_id => {conf, lift, because}
+
+        rules.forEach(r => {
+            if (!r.a.every(id => inCart.has(id))) return;       // semua produk "jika" harus ada di keranjang
+            r.c.forEach(id => {
+                const p = byId[id];
+                if (!p || inCart.has(id) || p.stock < 1) return;
+                if (!best[id] || r.conf > best[id].conf) best[id] = { conf: r.conf, lift: r.lift, because: r.a };
+            });
+        });
+
+        const list = Object.entries(best)
+            .sort((x, y) => y[1].conf - x[1].conf || y[1].lift - x[1].lift)
+            .slice(0, maxReco);
+
+        $('reco-card').classList.toggle('d-none', list.length === 0);
+        $('reco').innerHTML = list.map(([id, r]) => {
+            const p = byId[id];
+            const because = r.because.map(b => byId[b] ? byId[b].name : '').filter(Boolean).join(', ');
+            return `
+            <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-reco="${p.id}">
+                <div>
+                    <div class="fw-semibold">${esc(p.name)}</div>
+                    <small class="text-muted">${Math.round(r.conf * 100)}% pembeli ${esc(because)} juga membeli ini</small>
+                </div>
+                <div class="text-end">
+                    <span class="fw-semibold">${rp(p.price - p.discount)}</span><br>
+                    <span class="badge bg-primary"><i class="bi bi-plus"></i> Tambah</span>
+                </div>
+            </button>`;
+        }).join('');
     }
 
     function updateTotals() {
@@ -187,6 +235,13 @@
         const btn = e.target.closest('[data-id]');
         if (!btn) return;
         addToCart(+btn.dataset.id);
+        $('search').focus();
+    });
+
+    $('reco').addEventListener('click', e => {
+        const btn = e.target.closest('[data-reco]');
+        if (!btn) return;
+        addToCart(+btn.dataset.reco);
         $('search').focus();
     });
 

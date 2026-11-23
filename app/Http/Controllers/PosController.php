@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AprioriRun;
+use App\Models\AssociationRule;
 use App\Models\Discount;
 use App\Models\Product;
 use App\Services\CheckoutService;
@@ -30,7 +32,35 @@ class PosController extends Controller
             ])
             ->values();
 
-        return view('pos.index', compact('products'));
+        $recommendationRules = $this->recommendationRules();
+
+        return view('pos.index', compact('products', 'recommendationRules'));
+    }
+
+    /**
+     * Aturan asosiasi dari perhitungan Apriori terbaru (hanya yang berhubungan positif / lift > 1).
+     *
+     * @return list<array{a: list<int>, c: list<int>, conf: float, lift: float}>
+     */
+    private function recommendationRules(): array
+    {
+        $run = AprioriRun::latestRun();
+
+        if (! $run) {
+            return [];
+        }
+
+        return $run->rules()
+            ->where('lift', '>', 1)
+            ->orderByDesc('confidence')
+            ->get()
+            ->map(fn (AssociationRule $rule) => [
+                'a' => $rule->antecedent,
+                'c' => $rule->consequent,
+                'conf' => round($rule->confidence, 4),
+                'lift' => round($rule->lift, 2),
+            ])
+            ->all();
     }
 
     public function checkout(Request $request, CheckoutService $service)
